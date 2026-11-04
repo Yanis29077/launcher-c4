@@ -1,0 +1,46 @@
+name: Construire le launcher
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Installer Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+
+      - name: Construire l'APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Renommer l'APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk launcher-c4.apk
+
+      - name: Garder une copie dans Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-c4
+          path: launcher-c4.apk
+
+      - name: Publier une version téléchargeable
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Launcher C4 v${{ github.run_number }}
+          files: launcher-c4.apk
